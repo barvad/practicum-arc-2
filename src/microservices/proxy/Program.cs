@@ -3,6 +3,7 @@ using CinemaAbyss.Proxy.Interfaces;
 using CinemaAbyss.Proxy.Models;
 using Refit;
 using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -84,7 +85,7 @@ app.MapGet("/api/users", async (HttpContext context, IServiceProvider services) 
     return Results.Json(response.Content, statusCode: (int)response.StatusCode);
 });
 
-app.MapGet("/api/users/{id}", async (int id, IServiceProvider services) =>
+app.MapGet("/api/users", async ([FromQuery]int id, IServiceProvider services) =>
 {
     var monolith = GetService<IMonolithService>(services);
     var response = await monolith.GetUserById(id);
@@ -118,7 +119,7 @@ app.MapGet("/api/movies", async (HttpContext context, IServiceProvider services)
     }
 });
 
-app.MapGet("/api/movies/{id}", async (int id, IServiceProvider services) =>
+app.MapGet("/api/movies", async ([FromQuery]int id, IServiceProvider services) =>
 {
     var targetService = ShouldRouteToMoviesService() ? "movies" : "monolith";
     Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] GET /api/movies/{id} → {targetService} ({migrationPercent}%)");
@@ -165,7 +166,7 @@ app.MapGet("/api/payments", async (IServiceProvider services) =>
     return Results.Json(response.Content, statusCode: (int)response.StatusCode);
 });
 
-app.MapGet("/api/payments/{id}", async (int id, IServiceProvider services) =>
+app.MapGet("/api/payments", async ([FromQuery]int id, IServiceProvider services) =>
 {
     var monolith = GetService<IMonolithService>(services);
     var response = await monolith.GetPaymentById(id);
@@ -187,7 +188,7 @@ app.MapGet("/api/subscriptions", async (IServiceProvider services) =>
     return Results.Json(response.Content, statusCode: (int)response.StatusCode);
 });
 
-app.MapGet("/api/subscriptions/{id}", async (int id, IServiceProvider services) =>
+app.MapGet("/api/subscriptions", async ([FromQuery]int id, IServiceProvider services) =>
 {
     var monolith = GetService<IMonolithService>(services);
     var response = await monolith.GetSubscriptionById(id);
