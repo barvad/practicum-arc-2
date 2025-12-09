@@ -78,70 +78,77 @@ bool ShouldRouteToMoviesService()
 }
 
 // Users endpoints (always to monolith)
-app.MapGet("/api/users", async (HttpContext context, IServiceProvider services) =>
+app.MapGet("/api/users", async ([FromQuery] int? id, HttpContext context, IServiceProvider services) =>
 {
-    var monolith = GetService<IMonolithService>(services);
-    var response = await monolith.GetUsers();
-    return Results.Json(response.Content, statusCode: (int)response.StatusCode);
-});
-
-app.MapGet("/api/users", async ([FromQuery]int id, IServiceProvider services) =>
-{
-    var monolith = GetService<IMonolithService>(services);
-    var response = await monolith.GetUserById(id);
-    return Results.Json(response.Content, statusCode: (int)response.StatusCode);
+    if (id.HasValue)
+    {
+        Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] GET /api/users?id={id.Value} → Monolith");
+        var monolith = GetService<IMonolithService>(services);
+        var response = await monolith.GetUserById(id.Value);
+        return Results.Json(response.Content, statusCode: (int)response.StatusCode);
+    }
+    else
+    {
+        Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] GET /api/users → Monolith");
+        var monolith = GetService<IMonolithService>(services);
+        var response = await monolith.GetUsers();
+        return Results.Json(response.Content, statusCode: (int)response.StatusCode);
+    }
 });
 
 app.MapPost("/api/users", async (User user, IServiceProvider services) =>
 {
+    Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] POST /api/users → Monolith");
     var monolith = GetService<IMonolithService>(services);
     var response = await monolith.CreateUser(user);
     return Results.Json(response.Content, statusCode: (int)response.StatusCode);
 });
 
 // Movies endpoints with canary routing
-app.MapGet("/api/movies", async (HttpContext context, IServiceProvider services) =>
+app.MapGet("/api/movies", async ([FromQuery] int? id, HttpContext context, IServiceProvider services) =>
 {
     var targetService = ShouldRouteToMoviesService() ? "movies" : "monolith";
-    Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] GET /api/movies → {targetService} ({migrationPercent}%)");
 
-    if (targetService == "movies")
+    if (id.HasValue)
     {
-        var moviesService = GetService<IMoviesService>(services);
-        var response = await moviesService.GetMovies();
-        return Results.Json(response.Content, statusCode: (int)response.StatusCode);
+        Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] GET /api/movies?id={id.Value} → {targetService} ({migrationPercent}%)");
+
+        if (targetService == "movies")
+        {
+            var moviesService = GetService<IMoviesService>(services);
+            var response = await moviesService.GetMovieById(id.Value);
+            return Results.Json(response.Content, statusCode: (int)response.StatusCode);
+        }
+        else
+        {
+            var monolith = GetService<IMonolithService>(services);
+            var response = await monolith.GetMovieById(id.Value);
+            return Results.Json(response.Content, statusCode: (int)response.StatusCode);
+        }
     }
     else
     {
-        var monolith = GetService<IMonolithService>(services);
-        var response = await monolith.GetMovies();
-        return Results.Json(response.Content, statusCode: (int)response.StatusCode);
-    }
-});
+        Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] GET /api/movies → {targetService} ({migrationPercent}%)");
 
-app.MapGet("/api/movies", async ([FromQuery]int id, IServiceProvider services) =>
-{
-    var targetService = ShouldRouteToMoviesService() ? "movies" : "monolith";
-    Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] GET /api/movies/{id} → {targetService} ({migrationPercent}%)");
-
-    if (targetService == "movies")
-    {
-        var moviesService = GetService<IMoviesService>(services);
-        var response = await moviesService.GetMovieById(id);
-        return Results.Json(response.Content, statusCode: (int)response.StatusCode);
-    }
-    else
-    {
-        var monolith = GetService<IMonolithService>(services);
-        var response = await monolith.GetMovieById(id);
-        return Results.Json(response.Content, statusCode: (int)response.StatusCode);
+        if (targetService == "movies")
+        {
+            var moviesService = GetService<IMoviesService>(services);
+            var response = await moviesService.GetMovies();
+            return Results.Json(response.Content, statusCode: (int)response.StatusCode);
+        }
+        else
+        {
+            var monolith = GetService<IMonolithService>(services);
+            var response = await monolith.GetMovies();
+            return Results.Json(response.Content, statusCode: (int)response.StatusCode);
+        }
     }
 });
 
 app.MapPost("/api/movies", async (Movie movie, IServiceProvider services) =>
 {
     var isMoviesService = ShouldRouteToMoviesService();
-    var targetService = isMoviesService  ? "monolith" : "movies";
+    var targetService = isMoviesService ? "movies" : "monolith";
     Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] POST /api/movies → {targetService}");
 
     if (isMoviesService)
@@ -159,75 +166,56 @@ app.MapPost("/api/movies", async (Movie movie, IServiceProvider services) =>
 });
 
 // Payments endpoints (always to monolith)
-app.MapGet("/api/payments", async (IServiceProvider services) =>
+app.MapGet("/api/payments", async ([FromQuery] int? id, IServiceProvider services) =>
 {
-    var monolith = GetService<IMonolithService>(services);
-    var response = await monolith.GetPayments();
-    return Results.Json(response.Content, statusCode: (int)response.StatusCode);
-});
-
-app.MapGet("/api/payments", async ([FromQuery]int id, IServiceProvider services) =>
-{
-    var monolith = GetService<IMonolithService>(services);
-    var response = await monolith.GetPaymentById(id);
-    return Results.Json(response.Content, statusCode: (int)response.StatusCode);
+    if (id.HasValue)
+    {
+        Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] GET /api/payments?id={id.Value} → Monolith");
+        var monolith = GetService<IMonolithService>(services);
+        var response = await monolith.GetPaymentById(id.Value);
+        return Results.Json(response.Content, statusCode: (int)response.StatusCode);
+    }
+    else
+    {
+        Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] GET /api/payments → Monolith");
+        var monolith = GetService<IMonolithService>(services);
+        var response = await monolith.GetPayments();
+        return Results.Json(response.Content, statusCode: (int)response.StatusCode);
+    }
 });
 
 app.MapPost("/api/payments", async (Payment payment, IServiceProvider services) =>
 {
+    Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] POST /api/payments → Monolith");
     var monolith = GetService<IMonolithService>(services);
     var response = await monolith.CreatePayment(payment);
     return Results.Json(response.Content, statusCode: (int)response.StatusCode);
 });
 
 // Subscriptions endpoints (always to monolith)
-app.MapGet("/api/subscriptions", async (IServiceProvider services) =>
+app.MapGet("/api/subscriptions", async ([FromQuery] int? id, IServiceProvider services) =>
 {
-    var monolith = GetService<IMonolithService>(services);
-    var response = await monolith.GetSubscriptions();
-    return Results.Json(response.Content, statusCode: (int)response.StatusCode);
-});
-
-app.MapGet("/api/subscriptions", async ([FromQuery]int id, IServiceProvider services) =>
-{
-    var monolith = GetService<IMonolithService>(services);
-    var response = await monolith.GetSubscriptionById(id);
-    return Results.Json(response.Content, statusCode: (int)response.StatusCode);
+    if (id.HasValue)
+    {
+        Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] GET /api/subscriptions?id={id.Value} → Monolith");
+        var monolith = GetService<IMonolithService>(services);
+        var response = await monolith.GetSubscriptionById(id.Value);
+        return Results.Json(response.Content, statusCode: (int)response.StatusCode);
+    }
+    else
+    {
+        Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] GET /api/subscriptions → Monolith");
+        var monolith = GetService<IMonolithService>(services);
+        var response = await monolith.GetSubscriptions();
+        return Results.Json(response.Content, statusCode: (int)response.StatusCode);
+    }
 });
 
 app.MapPost("/api/subscriptions", async (Subscription subscription, IServiceProvider services) =>
 {
+    Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] POST /api/subscriptions → Monolith");
     var monolith = GetService<IMonolithService>(services);
     var response = await monolith.CreateSubscription(subscription);
-    return Results.Json(response.Content, statusCode: (int)response.StatusCode);
-});
-
-// Events endpoints (always to events service)
-app.MapGet("/api/events/health", async (IServiceProvider services) =>
-{
-    var eventsService = GetService<IEventsService>(services);
-    var response = await eventsService.HealthCheck();
-    return Results.Json(response.Content, statusCode: (int)response.StatusCode);
-});
-
-app.MapPost("/api/events/movie", async (MovieEvent movieEvent, IServiceProvider services) =>
-{
-    var eventsService = GetService<IEventsService>(services);
-    var response = await eventsService.CreateMovieEvent(movieEvent);
-    return Results.Json(response.Content, statusCode: (int)response.StatusCode);
-});
-
-app.MapPost("/api/events/user", async (UserEvent userEvent, IServiceProvider services) =>
-{
-    var eventsService = GetService<IEventsService>(services);
-    var response = await eventsService.CreateUserEvent(userEvent);
-    return Results.Json(response.Content, statusCode: (int)response.StatusCode);
-});
-
-app.MapPost("/api/events/payment", async (PaymentEvent paymentEvent, IServiceProvider services) =>
-{
-    var eventsService = GetService<IEventsService>(services);
-    var response = await eventsService.CreatePaymentEvent(paymentEvent);
     return Results.Json(response.Content, statusCode: (int)response.StatusCode);
 });
 
