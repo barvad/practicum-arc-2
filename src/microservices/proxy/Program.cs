@@ -1,4 +1,5 @@
-﻿using CinemaAbyss.Proxy.Interfaces;
+﻿using CinemaAbyss.Proxy;
+using CinemaAbyss.Proxy.Interfaces;
 using CinemaAbyss.Proxy.Models;
 using Refit;
 using System.Text.Json;
@@ -265,4 +266,5 @@ app.MapFallback(async (HttpContext context, IServiceProvider services) =>
     await context.Response.WriteAsync(content);
 });
 
+app.UseMiddleware<RequestLoggingMiddleware>();
 app.Run();
