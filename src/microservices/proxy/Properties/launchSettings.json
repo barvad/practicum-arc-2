@@ -1,0 +1,13 @@
+﻿{
+  "profiles": {
+    "CinemaAbyss.Proxy": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "applicationUrl": "http://localhost:8000",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "MOVIES_MIGRATION_PERCENT": "30"
+      }
+    }
+  }
+}

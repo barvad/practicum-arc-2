@@ -1,0 +1,46 @@
+@startuml
+!include <C4/C4_Container> 
+
+title CinemaAbyss - Архитектура с Proxy и микросервисами на C#
+
+Person(user, "Пользователь", "Смотрит фильмы, управляет подписками")
+Person(admin, "Администратор", "Управляет системой")
+
+System_Boundary(cinema_boundary, "CinemaAbyss System") {
+    
+    Container(proxy, "API Proxy", "C# (.NET)",        "Маршрутизация\nFeature flags\nCanary релизы\nMOVIES_MIGRATION_PERCENT")
+    
+    Container(monolith, "CinemaMonolith", "Go",        "Пользователи\nПлатежи\nПодписки")
+    
+    Container(movies_service, "Movies Service", "C# (.NET)",        "Управление каталогом фильмов")
+    
+    Container(events_service, "Events Service", "C# (.NET)",        "Сбор и обработка событий\nЗапись в Kafka\nЛогирование")
+    
+    Container(message_queue, "Kafka", "Message Queue")
+    
+    ContainerDb(shared_db, "PostgreSQL", "Общая база данных",        "БД cinemaabyss")
+}
+
+
+Rel(user, proxy, "HTTP/HTTPS", "API calls")
+Rel(admin, proxy, "HTTP/HTTPS", "Admin operations")
+
+
+Rel(proxy, monolith, "Проксирует (100-X)% запросов",    "На основе MOVIES_MIGRATION_PERCENT")
+
+Rel(proxy, movies_service, "Проксирует X% запросов",    "/api/movies*")
+
+Rel(proxy, events_service, "Все события",    "/api/events")
+
+
+Rel(events_service, message_queue, "Публикует события",    "Producer API")
+Rel(events_service, message_queue, "Читает события",    "Consumer API\nГруппа: events-logger")
+
+
+Rel(monolith, shared_db, "Чтение/запись", "SQL\nВсе таблицы")
+Rel(movies_service, shared_db, "Чтение/запись", "SQL\nmovies, movie_genres")
+
+
+
+
+@enduml

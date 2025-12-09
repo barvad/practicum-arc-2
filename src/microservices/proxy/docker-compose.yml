@@ -1,0 +1,9 @@
+﻿version: '3.8'
+services:
+  proxy:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - ASPNETCORE_URLS=http://+:8000
+      - MOVIES_MIGRATION_PERCENT=${MOVIES_MIGRATION_PERCENT:-30}

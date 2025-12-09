@@ -1,0 +1,17 @@
+﻿{
+  "profiles": {
+    "EventsService": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "applicationUrl": "http://localhost:8082",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "PORT": "8082",
+        "KAFKA_BOOTSTRAP_SERVERS": "localhost:9092",
+        "KAFKA_TOPIC_MOVIE": "movie-events",
+        "KAFKA_TOPIC_USER": "user-events",
+        "KAFKA_TOPIC_PAYMENT": "payment-events"
+      }
+    }
+  }
+}
