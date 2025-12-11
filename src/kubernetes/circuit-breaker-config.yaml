@@ -1,0 +1,79 @@
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: monolith-circuit-breaker
+  namespace: cinemaabyss
+spec:
+  host: monolith.cinemaabyss.svc.cluster.local
+  trafficPolicy:
+    connectionPool:
+      http:
+        http1MaxPendingRequests: 20
+        http2MaxRequests: 50
+        maxRequestsPerConnection: 20
+        maxRetries: 2
+    outlierDetection:
+      consecutive5xxErrors: 3
+      consecutiveGatewayErrors: 3
+      interval: 10s
+      baseEjectionTime: 60s
+      maxEjectionPercent: 30
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: movies-service-circuit-breaker
+  namespace: cinemaabyss
+spec:
+  host: movies-service.cinemaabyss.svc.cluster.local
+  trafficPolicy:
+    connectionPool:
+      http:
+        http1MaxPendingRequests: 15
+        http2MaxRequests: 30
+        maxRequestsPerConnection: 10
+        maxRetries: 3
+    outlierDetection:
+      consecutive5xxErrors: 2
+      consecutiveGatewayErrors: 2
+      interval: 15s
+      baseEjectionTime: 45s
+      maxEjectionPercent: 40
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: circuit-breaker-services-routes
+  namespace: cinemaabyss
+spec:
+  hosts:
+  - "movies-service.cinemaabyss.svc.cluster.local"
+  - "monolith.cinemaabyss.svc.cluster.local"
+  
+  http:
+  # Для movies-service
+  - match:
+    - uri:
+        prefix: /api/movies  # или другой путь
+    route:
+    - destination:
+        host: movies-service.cinemaabyss.svc.cluster.local
+        port:
+          number: 8081
+    timeout: 3s
+    retries:
+      attempts: 3
+      perTryTimeout: 1s
+      retryOn: "connect-failure,refused-stream,unavailable,5xx,gateway-error"
+  
+  # Для monolith
+  - route:
+    - destination:
+        host: monolith.cinemaabyss.svc.cluster.local
+        port:
+          number: 8080
+    timeout: 5s
+    retries:
+      attempts: 2
+      perTryTimeout: 2s
+      retryOn: "connect-failure,refused-stream,unavailable,5xx"
