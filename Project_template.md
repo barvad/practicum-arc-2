@@ -355,6 +355,8 @@ minikube tunnel
 Потом вызовите 
 https://cinemaabyss.example.com/api/movies
 и приложите скриншот развертывания helm и вывода https://cinemaabyss.example.com/api/movies
+[helminstall.png](https://github.com/barvad/practicum-arc-2/blob/cinema/screenshots/helminstall.png)
+[helmmovies.png](https://github.com/barvad/practicum-arc-2/blob/cinema/screenshots/helmmovies.png)
 
 
 # Задание 5
