@@ -25,7 +25,56 @@ spec:
     spec:
       containers:
       - name: events-service
-       .... тут
+        image: {{ .Values.eventsService.image.repository }}:{{ .Values.eventsService.image.tag }}
+        imagePullPolicy: {{ .Values.eventsService.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.eventsService.service.targetPort }}
+        env:
+        - name: PORT
+          value: "{{ .Values.eventsService.service.targetPort }}"
+        - name: DB_HOST
+          value: {{ .Values.database.host | quote }}
+        - name: DB_PORT
+          value: "{{ .Values.database.port }}"
+        - name: DB_NAME
+          value: {{ .Values.database.name | quote }}
+        - name: DB_USER
+          value: {{ .Values.database.user | quote }}
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: cinemaabyss-secrets
+              key: DB_PASSWORD
+        - name: KAFKA_BROKERS
+          value: {{ printf "%s.%s.svc.cluster.local:9092" "kafka" .Values.global.namespace | quote }}
+        - name: KAFKA_TOPICS_MOVIE_EVENTS
+          value: {{ index .Values.kafka.topics 0 "name" | quote }}
+        - name: KAFKA_TOPICS_USER_EVENTS
+          value: {{ index .Values.kafka.topics 1 "name" | quote }}
+        - name: KAFKA_TOPICS_PAYMENT_EVENTS
+          value: {{ index .Values.kafka.topics 2 "name" | quote }}
+        - name: MOVIES_SERVICE_URL
+          value: {{ printf "http://movies-service.%s.svc.cluster.local:%d" .Values.global.namespace .Values.moviesService.service.port | quote }}
+        envFrom:
+        - configMapRef:
+            name: cinemaabyss-config
+        resources:
+          {{- toYaml .Values.eventsService.resources | nindent 10 }}
+        readinessProbe:
+          httpGet:
+            path: /api/events/health
+            port: {{ .Values.eventsService.service.targetPort }}
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /api/events/health
+            port: {{ .Values.eventsService.service.targetPort }}
+          initialDelaySeconds: 15
+          periodSeconds: 20
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: dockerconfigjson
 ---
 apiVersion: v1
 kind: Service
@@ -37,5 +86,11 @@ metadata:
     app.kubernetes.io/name: {{ include "cinemaabyss.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
- ........ и тут
+  selector:
+    app: events-service
+  ports:
+  - port: {{ .Values.eventsService.service.port }}
+    targetPort: {{ .Values.eventsService.service.targetPort }}
+    name: http
+  type: {{ .Values.eventsService.service.type }}
 {{- end }}
