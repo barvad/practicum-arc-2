@@ -423,6 +423,8 @@ You can see 21 for the upstream_rq_pending_overflow value which means 21 calls s
 ```
 
 Приложите скриншот работы circuit breaker'а
+[fortiotests.png](https://github.com/barvad/practicum-arc-2/blob/cinema/screenshots/fortiotests.png)
+[fortiostats.png](https://github.com/barvad/practicum-arc-2/blob/cinema/screenshots/fortiostats.png)
 
 Удаляем все
 ```bash
