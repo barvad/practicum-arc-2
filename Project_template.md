@@ -5,7 +5,9 @@
 1. Спроектируйте to be архитектуру КиноБездны, разделив всю систему на отдельные домены и организовав интеграционное взаимодействие и единую точку вызова сервисов.
 Результат представьте в виде контейнерной диаграммы в нотации С4.
 Добавьте ссылку на файл в этот шаблон
-[ссылка на файл](ссылка)
+
+[Containers.puml](https://github.com/barvad/practicum-arc-2/blob/cinema/diagrams/Containers.puml)
+
 
 
 ## Задание 2
@@ -58,6 +60,9 @@
 
 Необходимые тесты для проверки этого API вызываются при запуске npm run test:local из папки tests/postman 
 Приложите скриншот тестов и скриншот состояния топиков Kafka http://localhost:8090 
+[localtests.png](https://github.com/barvad/practicum-arc-2/blob/cinema/screenshots/localtests.png)
+[kafka.png](https://github.com/barvad/practicum-arc-2/blob/cinema/screenshots/kafka.png)
+
 
 
 ## Задание 3
